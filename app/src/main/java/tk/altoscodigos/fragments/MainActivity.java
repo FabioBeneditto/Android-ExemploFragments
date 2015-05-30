@@ -1,38 +1,52 @@
 package tk.altoscodigos.fragments;
 
-import android.support.v7.app.ActionBarActivity;
+import android.app.Activity;
+import android.app.FragmentTransaction;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 
-
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends Activity implements Lista.AoSelecionarItemEventos {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-    }
+        setContentView( R.layout.tela_principal );
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
+        if( findViewById( R.id.activity_fragment_container ) != null ) {
+            // Ahh, puxa, to num celular!
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+            if( savedInstanceState != null ) {
+                return;
+            }
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+            Lista lista = new Lista();
+            lista.setArguments( getIntent().getExtras() );
+
+            FragmentTransaction transaction = getFragmentManager().beginTransaction();
+            transaction.add( R.id.activity_fragment_container, lista );
+            transaction.commit();
         }
+    }
 
-        return super.onOptionsItemSelected(item);
+    @Override
+    public void aoSelecionarItem( DadosDoItem item ) {
+
+        Detalhes detalhes = (Detalhes) getFragmentManager().findFragmentById( R.id.fragment_detalhes );
+
+        if( detalhes != null ) {
+            // Ahh, puxa, to num tablet
+            detalhes.setDetalhes( item );
+        } else {
+            // Ahh, puxa, to no celular
+
+            detalhes = new Detalhes();
+            Bundle parametros = new Bundle();
+            parametros.putSerializable( "ItemSelecionado", item );
+            detalhes.setArguments( parametros );
+
+            FragmentTransaction transaction = getFragmentManager().beginTransaction();
+            transaction.replace( R.id.activity_fragment_container, detalhes );
+            transaction.addToBackStack( null );
+            transaction.commit();
+        }
     }
 }
